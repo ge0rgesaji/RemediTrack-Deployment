@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Lifecycle{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+  <div class="page-heading-copy">
+    <span class="page-icon bg-white shadow-sm text-primary"><i class="bi bi-gear-fill" aria-hidden="true"></i></span>
+    <div>
+      <p class="eyebrow text-primary mb-1">Triage & Response</p>
+      <h1 class="h3 mb-1 fw-bold">Manage Vulnerability</h1>
+      <p class="text-muted mb-0">Adjust severity, update mitigation status, and assign resources.</p>
+    </div>
+  </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-xl-6 col-lg-8">
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="card-body p-4 p-md-5">
+                <div class="mb-4 pb-3 border-bottom">
+                    <h5 class="fw-bold text-dark mb-1">{{ vulnerability.title }}</h5>
+                    <span class="small text-muted">ID: #{{ vulnerability.pk|stringformat:"05d" }}</span>
+                </div>
+
+                <form method="post" id="manage-form">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-4" id="div_{{ field.name }}">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-bold text-dark">{{ field.label }}</label>
+                            
+                            {% if field.name == 'comment' %}
+                                <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control bg-light border-2" rows="4" placeholder="Reason for this change or next steps..." required>{{ field.value|default:'' }}</textarea>
+                            {% else %}
+                                <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-select bg-light border-2 shadow-xs">
+                                    {% for value, text in field.field.choices %}
+                                        <option value="{{ value }}" {% if field.value|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                            
+                            {% if field.errors %}
+                                <div class="text-danger small mt-2 fw-semibold"><i class="bi bi-exclamation-circle me-1"></i> {{ field.errors|striptags }}</div>
+                            {% endif %}
+                            {% if field.help_text %}
+                                <div class="form-text mt-2 small text-muted"><i class="bi bi-info-circle me-1"></i> {{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                        <a href="{% url 'vulnerability_detail' vulnerability.pk %}" class="btn btn-light px-4 fw-semibold text-muted">
+                            <i class="bi bi-x-lg me-2"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-5 py-2 shadow-sm fw-bold">
+                            <i class="bi bi-save me-2"></i> Commit Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.querySelector('select[name="status"]');
+    const divAssignee = document.getElementById('div_developer_assignee');
+    const divComment = document.getElementById('div_comment');
+
+    function toggleFields() {
+        if (statusSelect.value === 'CLOSED') {
+            if (divAssignee) divAssignee.style.display = 'none';
+            if (divComment) divComment.style.display = 'none';
+        } else {
+            if (divAssignee) divAssignee.style.display = 'block';
+            if (divComment) divComment.style.display = 'block';
+        }
+    }
+
+    if (statusSelect) {
+        statusSelect.addEventListener('change', toggleFields);
+        toggleFields(); // Initial state
+    }
+});
+</script>
+{% endblock %}

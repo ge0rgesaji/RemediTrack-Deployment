@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Report Incident{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+  <div class="page-heading-copy">
+    <span class="page-icon shadow-sm text-primary"><i class="bi bi-shield-plus" aria-hidden="true"></i></span>
+    <div>
+      <p class="eyebrow text-primary mb-1">New Entry</p>
+      <h1 class="h3 mb-1 fw-bold">Report Vulnerability</h1>
+      <p class="text-muted mb-0">Disclose a security vulnerability for analysis and triage by the security team.</p>
+    </div>
+  </div>
+</div>
+
+<div class="row justify-content-center mt-4 pb-5">
+    <div class="col-xl-8 col-lg-10">
+        <div class="panel shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <div class="alert alert-info border-0 shadow-xs mb-5 d-flex align-items-start bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-info-square-fill me-3 mt-1 fs-5"></i>
+                    <div>
+                        <strong class="d-block mb-1">Submission Guidelines</strong>
+                        <span class="small">Ensure you provide a clear description and attach a Proof of Concept (PoC) screenshot if possible to expedite the verification process.</span>
+                    </div>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="needs-validation">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-bold d-flex justify-content-between">
+                                {{ field.label }}
+                                {% if field.field.required %}<span class="text-danger small">*Required</span>{% endif %}
+                            </label>
+                            
+                            {% if field.name == 'description' %}
+                                <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control bg-primary bg-opacity-10 focus-shadow-none border-2" rows="6" placeholder="Describe the vulnerability, its impact, and steps to reproduce..." required>{{ field.value|default:'' }}</textarea>
+                            {% elif field.name == 'poc_screenshot' %}
+                                <div class="p-4 border-2 border-dashed rounded bg-primary bg-opacity-10 text-center position-relative">
+                                    <i class="bi bi-cloud-arrow-up text-primary fs-1 mb-2 d-block"></i>
+                                    <span class="d-block text-muted small mb-3">Upload evidence screenshot (PNG, JPG)</span>
+                                    <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control shadow-sm">
+                                </div>
+                            {% else %}
+                                <input type="{% if field.field.widget.input_type %}{{ field.field.widget.input_type }}{% else %}text{% endif %}" 
+                                       name="{{ field.name }}" 
+                                       id="{{ field.id_for_label }}" 
+                                       class="form-control bg-primary bg-opacity-10 border-2" 
+                                       value="{{ field.value|default:'' }}" 
+                                       placeholder="Enter {{ field.label|lower }}..."
+                                       {% if field.field.required %}required{% endif %}>
+                            {% endif %}
+                            
+                            {% if field.errors %}
+                                <div class="text-danger small mt-2 fw-semibold"><i class="bi bi-exclamation-circle me-1"></i> {{ field.errors|striptags }}</div>
+                            {% endif %}
+                            {% if field.help_text %}
+                                <div class="form-text mt-2 small text-muted"><i class="bi bi-info-circle me-1"></i> {{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                        <a href="{% url 'dashboard' %}" class="btn btn-panel px-4 fw-semibold text-muted">
+                            <i class="bi bi-x-lg me-2"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-5 py-2 shadow-sm fw-bold">
+                            <i class="bi bi-send-fill me-2"></i> Submit Investigation Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

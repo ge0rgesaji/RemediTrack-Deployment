@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Vulnerability Analysis{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+  <div class="page-heading-copy">
+    <span class="page-icon shadow-sm text-primary"><i class="bi bi-bug" aria-hidden="true"></i></span>
+    <div>
+      <p class="eyebrow text-primary mb-1">Security Incident Report</p>
+      <h1 class="h3 mb-1 fw-bold">{{ vulnerability.title }}</h1>
+      <p class="text-muted mb-0">Analysis, remediation tracking, and historical audit log.</p>
+    </div>
+  </div>
+  <div class="heading-actions d-flex gap-2">
+    <span class="badge rounded-pill shadow-sm {% if vulnerability.severity == 'CRITICAL' %}text-bg-danger{% elif vulnerability.severity == 'HIGH' %}text-bg-warning{% elif vulnerability.severity == 'MEDIUM' %}text-bg-info{% else %}text-bg-secondary{% endif %} p-2 px-3">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ vulnerability.get_severity_display }} Severity
+    </span>
+    <span class="badge rounded-pill shadow-sm text-bg-primary p-2 px-3">
+        <i class="bi bi-activity me-1"></i> {{ vulnerability.get_status_display }}
+    </span>
+  </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-lg-8">
+        <div class="panel shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                        <i class="bi bi-file-text fs-4"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold">Observation & Impact</h5>
+                </div>
+                <div class="p-4 bg-primary bg-opacity-10 border-start border-primary border-4 rounded-end shadow-sm mb-5" style="line-height: 1.7;">
+                    {{ vulnerability.description|linebreaks }}
+                </div>
+
+                {% if vulnerability.poc_screenshot %}
+                <div class="d-flex align-items-center mb-4 mt-5">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                        <i class="bi bi-camera fs-4"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold">Evidence & Proof of Concept</h5>
+                </div>
+                <div class="text-center bg-primary bg-opacity-10 p-3 rounded shadow-sm border mb-5">
+                    <img src="{{ vulnerability.poc_screenshot.url }}" class="img-fluid rounded border shadow-sm" alt="Vulnerability Evidence">
+                    <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i> Captured proof of vulnerability exploitaton.</p>
+                </div>
+                {% endif %}
+
+                <div class="d-flex align-items-center mb-4 mt-5">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                        <i class="bi bi-clock-history fs-4"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold">Remediation Timeline & Notes</h5>
+                </div>
+                <div class="timeline-sm ps-3">
+                    {% for comment in vulnerability.comments.all %}
+                    <div class="mb-5 ps-4 position-relative border-start border-2">
+                        <div class="position-absolute start-0 top-0 bg-primary rounded-circle shadow-sm" style="width: 14px; height: 14px; transform: translateX(-50%) translateY(4px);"></div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-img avatar-table bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold small me-2 border">
+                                    {% if comment.author.profile_picture %}
+                                        <img src="{{ comment.author.profile_picture.url }}" class="avatar-img avatar-table" alt="{{ comment.author.username }}">
+                                    {% else %}
+                                        <span style="font-size: 0.65rem;">{{ comment.author.username|slice:":1"|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <span class="fw-bold">
+                                    <a href="{% url 'public_profile' comment.author.pk %}" class="text-decoration-none">
+                                        {% if comment.author.get_full_name %}{{ comment.author.get_full_name }}{% else %}{{ comment.author.username }}{% endif %}
+                                    </a>
+                                    <span class="badge bg-primary bg-opacity-10 text-muted small border ms-1">{{ comment.author.get_role_display }}</span>
+                                </span>
+                            </div>
+                            <small class="text-muted fw-semibold bg-primary bg-opacity-10 px-2 py-1 rounded shadow-xs"><i class="bi bi-calendar3 me-1"></i> {{ comment.created_at|date:"M j, Y, H:i" }}</small>
+                        </div>
+                        <div class="panel shadow-sm border-0 border-top border-primary border-3 mt-2">
+                            <div class="card-body p-3">
+                                <div style="font-size: 0.95rem;">{{ comment.text|linebreaks }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 bg-primary bg-opacity-10 rounded border border-dashed shadow-xs mb-3">
+                        <p class="text-muted small mb-0 italic"><i class="bi bi-chat-dots me-2"></i> No remediation activities or audit logs recorded yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="panel shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-4 fw-bold border-bottom pb-2">Artifact Metadata</h5>
+                <div class="vstack gap-4">
+                    <div>
+                        <small class="text-muted d-block text-uppercase fw-bold small mb-1 ls-wide">Initial Reporter</small>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-img avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold me-2 border">
+                                {% if vulnerability.reporter.profile_picture %}
+                                    <img src="{{ vulnerability.reporter.profile_picture.url }}" class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                                {% else %}
+                                    {{ vulnerability.reporter.username|slice:":1"|upper }}
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'public_profile' vulnerability.reporter.pk %}" class="text-decoration-none fw-bold">
+                                {% if vulnerability.reporter.get_full_name %}{{ vulnerability.reporter.get_full_name }}{% else %}{{ vulnerability.reporter.username }}{% endif %}
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <small class="text-muted d-block text-uppercase fw-bold small mb-1 ls-wide">Current Assignee</small>
+                        {% if vulnerability.developer_assignee %}
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-img avatar-sm bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center fw-bold me-2 border">
+                                    {% if vulnerability.developer_assignee.profile_picture %}
+                                        <img src="{{ vulnerability.developer_assignee.profile_picture.url }}" class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                                    {% else %}
+                                        {{ vulnerability.developer_assignee.username|slice:":1"|upper }}
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'public_profile' vulnerability.developer_assignee.pk %}" class="text-decoration-none fw-bold">
+                                    {% if vulnerability.developer_assignee.get_full_name %}{{ vulnerability.developer_assignee.get_full_name }}{% else %}{{ vulnerability.developer_assignee.username }}{% endif %}
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="p-3 bg-primary bg-opacity-10 rounded text-center border-dashed border">
+                                <span class="text-muted small italic"><i class="bi bi-person-x me-1"></i> Waiting for triage</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <small class="text-muted d-block text-uppercase fw-bold small mb-1 ls-wide">Incident Lifecycle</small>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded shadow-xs">
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-muted">Reported:</span>
+                                <span class="fw-bold">{{ vulnerability.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Last Update:</span>
+                                <span class="fw-bold">{{ vulnerability.comments.last.created_at|date:"M d, Y"|default:vulnerability.created_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-4 fw-bold border-bottom pb-2">Response Actions</h5>
+                <div class="d-grid gap-2">
+                    {% if user.role == 'TEAMLEADER' and vulnerability.status != 'CLOSED' %}
+                        <a href="{% url 'manage_vulnerability' vulnerability.pk %}" class="btn btn-primary shadow-sm py-2">
+                            <i class="bi bi-gear-fill me-2"></i> Manage Lifecycle
+                        </a>
+                    {% elif vulnerability.developer_assignee == user %}
+                        {% if user.role == 'DEVELOPER' and vulnerability.status in 'REPORTED,IN_PROGRESS' %}
+                            <a href="{% url 'complete_task' vulnerability.pk %}" class="btn btn-success shadow-sm py-2">
+                                <i class="bi bi-check-circle-fill me-2"></i> Mark Remediated
+                            </a>
+                        {% elif user.role == 'ANALYST' and vulnerability.status == 'FIXED' %}
+                            <a href="{% url 'complete_task' vulnerability.pk %}" class="btn btn-success shadow-sm py-2">
+                                <i class="bi bi-shield-fill-check me-2"></i> Verify Mitigation
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary py-2">
+                        <i class="bi bi-arrow-left me-2"></i> Back to Fleet
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

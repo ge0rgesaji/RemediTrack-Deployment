@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Team Management{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+  <div class="page-heading-copy">
+    <span class="page-icon shadow-sm text-primary"><i class="bi bi-microsoft-teams" aria-hidden="true"></i></span>
+    <div>
+      <p class="eyebrow text-primary mb-1">Organization</p>
+      <h1 class="h3 mb-1 fw-bold">RemediTrack Team Management</h1>
+      <p class="text-muted mb-0">Manage security teams, assign leaders, and audit membership across the organization.</p>
+    </div>
+  </div>
+  {% if user.is_admin_role %}
+  <div class="heading-actions">
+    <a href="{% url 'team_add' %}" class="btn btn-primary shadow-sm px-4">
+      <i class="bi bi-plus-lg me-2"></i> Create New Team
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="panel shadow-sm border-0 mt-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-primary bg-opacity-10 text-muted small text-uppercase fw-bold">
+                    <tr>
+                        <th class="ps-4 py-3 border-0">Team Name</th>
+                        <th class="py-3 border-0">Team Leader</th>
+                        <th class="py-3 border-0">Composition</th>
+                        <th class="py-3 border-0">Established</th>
+                        <th class="text-end pe-4 py-3 border-0">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-primary">{{ team.name }}</div>
+                            <div class="text-muted small d-none d-sm-block">Identifier: TM-{{ team.pk|stringformat:"03d" }}</div>
+                        </td>
+                        <td>
+                            {% if team.leader %}
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-img avatar-table bg-primary bg-opacity-10 text-primary me-2 d-inline-flex align-items-center justify-content-center fw-bold">
+                                        {% if team.leader.profile_picture %}
+                                            <img src="{{ team.leader.profile_picture.url }}" class="avatar-img avatar-table" alt="{{ team.leader.username }}">
+                                        {% else %}
+                                            <span style="font-size: 0.65rem;">{{ team.leader.username|slice:":1"|upper }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="small fw-semibold">
+                                        {% if team.leader.get_full_name %}{{ team.leader.get_full_name }}{% else %}{{ team.leader.username }}{% endif %}
+                                    </span>
+                                </div>
+                            {% else %}
+                                <span class="text-muted small italic"><i class="bi bi-person-x me-1"></i>Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3">
+                                {{ team.members.count }} Members
+                            </span>
+                        </td>
+                        <td><span class="text-muted small">{{ team.created_at|date:"M j, Y" }}</span></td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group btn-group-sm shadow-sm rounded">
+                                <a href="{% url 'team_detail' team.pk %}" class="btn btn-panel border px-3" title="View Details"><i class="bi bi-eye"></i></a>
+                                <a href="{% url 'team_edit' team.pk %}" class="btn btn-panel border px-3 text-primary" title="Edit Configuration"><i class="bi bi-pencil-square"></i></a>
+                                {% if user.is_admin_role %}
+                                    <a href="{% url 'team_delete' team.pk %}" class="btn btn-panel border px-3 text-danger" title="Delete Team"><i class="bi bi-trash"></i></a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="py-4">
+                                <i class="bi bi-people text-muted mb-3" style="font-size: 3rem; display: block;"></i>
+                                <h5 class="fw-bold text-muted">No Security Teams Defined</h5>
+                                <p class="text-muted small">Establish your first security team to start organizing users.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

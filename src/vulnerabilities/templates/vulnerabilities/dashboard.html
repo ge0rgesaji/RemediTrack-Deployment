@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}RemediTrack Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+  <div class="page-heading-copy">
+    <span class="page-icon shadow-sm text-primary"><i class="bi bi-grid-1x2" aria-hidden="true"></i></span>
+    <div>
+      <p class="eyebrow text-primary mb-1">Operations</p>
+      <h1 class="h3 mb-1 fw-bold">RemediTrack Dashboard</h1>
+      <p class="text-muted mb-0">Centralized view of reported security risks and mitigation progress.</p>
+    </div>
+  </div>
+  {% if not is_unassigned and user.role == 'ANALYST' %}
+  <div class="heading-actions">
+    <a href="{% url 'report_vulnerability' %}" class="btn btn-primary shadow-sm px-4">
+      <i class="bi bi-shield-plus me-2"></i> Report Vulnerability
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+{% if is_unassigned %}
+    <div class="panel shadow-sm border-0 mt-4 overflow-hidden">
+        <div class="card-body py-5 text-center">
+            <div class="mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 100px; height: 100px;">
+                    <i class="bi bi-shield-lock text-muted" style="font-size: 3rem;"></i>
+                </div>
+            </div>
+            <h2 class="fw-bold">Assignment Pending</h2>
+            <p class="text-muted mx-auto mb-4" style="max-width: 500px;">Your account (<strong>{{ user.username }}</strong>) is active but has not yet been assigned to a security team.</p>
+            <div class="d-flex justify-content-center gap-2">
+                <a href="{% url 'profile' %}" class="btn btn-primary px-4 shadow-sm">Complete Profile</a>
+                <button class="btn btn-outline-secondary px-4">Contact Admin</button>
+            </div>
+            <p class="text-muted small mt-5">For security reasons, the dashboard content is restricted until your Admin assigns you to a group.</p>
+        </div>
+    </div>
+{% else %}
+    <div class="panel shadow-sm border-0 mt-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-primary bg-opacity-10 text-muted small text-uppercase fw-bold">
+                        <tr>
+                            <th class="ps-4 py-3 border-0">Vulnerability Title</th>
+                            <th class="py-3 border-0">Severity</th>
+                            <th class="py-3 border-0">Status</th>
+                            <th class="py-3 border-0">Reporter</th>
+                            {% if user.is_admin_role %}
+                                <th class="py-3 border-0">Reporting Team</th>
+                            {% endif %}
+                            <th class="py-3 border-0">Assignee</th>
+                            <th class="py-3 border-0">Date Reported</th>
+                            <th class="text-end pe-4 py-3 border-0">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vuln in vulnerabilities %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold">#{{ vuln.pk|stringformat:"05d" }} - {{ vuln.title }}</div>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill {% if vuln.severity == 'CRITICAL' %}text-bg-danger{% elif vuln.severity == 'HIGH' %}text-bg-warning{% elif vuln.severity == 'MEDIUM' %}text-bg-info{% else %}text-bg-secondary{% endif %} px-3">
+                                    {{ vuln.get_severity_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="status-dot me-2 {% if vuln.status == 'MITIGATED' %}bg-success{% elif vuln.status == 'FIXED' %}bg-info{% elif vuln.status == 'IN_PROGRESS' %}bg-primary{% elif vuln.status == 'REPORTED' %}bg-secondary{% else %}bg-dark{% endif %} shadow-sm"></span>
+                                    <span class="small fw-semibold">{{ vuln.get_status_display }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{% url 'public_profile' vuln.reporter.pk %}" class="text-decoration-none d-flex align-items-center">
+                                    <div class="avatar-img avatar-table bg-light text-primary me-2 d-inline-flex align-items-center justify-content-center fw-bold">
+                                        {% if vuln.reporter.profile_picture %}
+                                            <img src="{{ vuln.reporter.profile_picture.url }}" class="avatar-img avatar-table" alt="{{ vuln.reporter.username }}">
+                                        {% else %}
+                                            <span style="font-size: 0.65rem;">{{ vuln.reporter.username|slice:":1"|upper }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="small text-muted fw-semibold">{% if vuln.reporter.get_full_name %}{{ vuln.reporter.get_full_name }}{% else %}{{ vuln.reporter.username }}{% endif %}</span>
+                                </a>
+                            </td>
+                            {% if user.is_admin_role %}
+                                <td>
+                                    {% if vuln.reporting_team %}
+                                        <span class="badge bg-light text-muted border border-1">{{ vuln.reporting_team.name }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">N/A</span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                            <td>
+                                {% if vuln.developer_assignee %}
+                                    <a href="{% url 'public_profile' vuln.developer_assignee.pk %}" class="text-decoration-none d-flex align-items-center">
+                                        <div class="avatar-img avatar-table bg-light text-primary me-2 d-inline-flex align-items-center justify-content-center fw-bold">
+                                            {% if vuln.developer_assignee.profile_picture %}
+                                                <img src="{{ vuln.developer_assignee.profile_picture.url }}" class="avatar-img avatar-table" alt="{{ vuln.developer_assignee.username }}">
+                                            {% else %}
+                                                <span style="font-size: 0.65rem;">{{ vuln.developer_assignee.username|slice:":1"|upper }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <span class="small text-muted fw-semibold">{% if vuln.developer_assignee.get_full_name %}{{ vuln.developer_assignee.get_full_name }}{% else %}{{ vuln.developer_assignee.username }}{% endif %}</span>
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small italic"><i class="bi bi-person-dash me-1"></i>Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="text-muted small">{{ vuln.created_at|date:"M j, Y" }}</span></td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm shadow-sm rounded">
+                                    <a href="{% url 'vulnerability_detail' vuln.pk %}" class="btn btn-panel border px-3" title="View Details"><i class="bi bi-eye"></i></a>
+                                    {% if user.role == 'TEAMLEADER' and vuln.status != 'CLOSED' %}
+                                        <a href="{% url 'manage_vulnerability' vuln.pk %}" class="btn btn-panel border px-3 text-primary" title="Manage"><i class="bi bi-gear"></i></a>
+                                    {% elif vuln.developer_assignee == user %}
+                                        {% if user.role == 'DEVELOPER' and vuln.status in 'REPORTED,IN_PROGRESS' %}
+                                            <a href="{% url 'complete_task' vuln.pk %}" class="btn btn-success px-3" title="Mark Complete"><i class="bi bi-check-lg"></i></a>
+                                        {% elif user.role == 'ANALYST' and vuln.status == 'FIXED' %}
+                                            <a href="{% url 'complete_task' vuln.pk %}" class="btn btn-success px-3" title="Verify Fix"><i class="bi bi-shield-check"></i></a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="py-4">
+                                    <i class="bi bi-inbox text-muted mb-3" style="font-size: 3rem; display: block;"></i>
+                                    <h5 class="fw-bold text-muted">No Vulnerabilities Tracked</h5>
+                                    <p class="text-muted small">Everything looks secure! No records matching your current filter.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

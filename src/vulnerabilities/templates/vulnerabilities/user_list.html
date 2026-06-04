@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{% if user.is_admin_role %}User Management{% else %}Directory{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+  <div class="page-heading-copy">
+    <span class="page-icon shadow-sm text-primary"><i class="bi bi-people" aria-hidden="true"></i></span>
+    <div>
+      <p class="eyebrow text-primary mb-1">Personnel</p>
+      <h1 class="h3 mb-1 fw-bold">{% if user.is_admin_role %}RemediTrack User Management{% else %}Member Directory{% endif %}</h1>
+      <p class="text-muted mb-0">Browse security personnel, manage access levels, and audit account statuses.</p>
+    </div>
+  </div>
+  {% if user.is_admin_role %}
+  <div class="heading-actions">
+    <a href="{% url 'user_add' %}" class="btn btn-primary shadow-sm px-4">
+      <i class="bi bi-person-plus me-2"></i> Register New User
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="panel shadow-sm border-0 mt-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-primary bg-opacity-10 text-muted small text-uppercase fw-bold">
+                    <tr>
+                        <th class="ps-4 py-3 border-0">Identity</th>
+                        <th class="py-3 border-0">Primary Contact</th>
+                        <th class="py-3 border-0">Functional Role</th>
+                        <th class="py-3 border-0">Account Status</th>
+                        {% if user.is_admin_role %}
+                            <th class="text-end pe-4 py-3 border-0">Control</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user_item in users %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-img avatar-table bg-primary bg-opacity-10 text-primary me-3 d-inline-flex align-items-center justify-content-center fw-bold">
+                                    {% if user_item.profile_picture %}
+                                        <img src="{{ user_item.profile_picture.url }}" class="avatar-img avatar-table" alt="{{ user_item.username }}">
+                                    {% else %}
+                                        <span style="font-size: 0.65rem;">{{ user_item.username|slice:":1"|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <a href="{% url 'public_profile' user_item.pk %}" class="fw-bold text-decoration-none d-block">
+                                        {% if user_item.get_full_name %}{{ user_item.get_full_name }}{% else %}{{ user_item.username }}{% endif %}
+                                    </a>
+                                    <span class="text-muted small">@{{ user_item.username }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">
+                                <i class="bi bi-envelope text-muted me-1"></i> {{ user_item.email|default:"No email listed" }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3">
+                                {{ user_item.get_role_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if user_item.is_active %}
+                                <div class="d-flex align-items-center">
+                                    <span class="status-dot bg-success me-2 shadow-sm"></span>
+                                    <span class="small fw-semibold">Active</span>
+                                </div>
+                            {% else %}
+                                <div class="d-flex align-items-center">
+                                    <span class="status-dot bg-danger me-2 shadow-sm"></span>
+                                    <span class="small fw-semibold text-muted">Suspended</span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        {% if user.is_admin_role %}
+                        <td class="text-end pe-4">
+                            <div class="btn-group btn-group-sm shadow-sm rounded">
+                                <a href="{% url 'user_edit' user_item.pk %}" class="btn btn-panel border px-3" title="Edit Configuration"><i class="bi bi-pencil-square"></i></a>
+                                {% if user_item != request.user %}
+                                    <a href="{% url 'user_delete' user_item.pk %}" class="btn btn-panel border px-3 text-danger" title="Revoke Access"><i class="bi bi-person-x"></i></a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="py-4">
+                                <i class="bi bi-person-slash text-muted mb-3" style="font-size: 3rem; display: block;"></i>
+                                <h5 class="fw-bold text-muted">No Personnel Records</h5>
+                                <p class="text-muted small">No user accounts match your current directory view.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+endblock %}

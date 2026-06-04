@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RemediTrack authentication page">
+  <title>Sign In | RemediTrack Portal</title>
+
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendors/bootstrap-icons/bootstrap-icons.css' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body class="auth-body">
+  <!-- Theme Toggle moved to global header position (top-right of page) -->
+  <button class="icon-button theme-toggle auth-theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme" title="Switch color theme">
+    <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
+  </button>
+
+  <main class="auth-page">
+    <section class="auth-card shadow-lg border-0">
+      <div class="auth-brand">
+        <span class="brand-icon bg-primary text-white shadow-sm"><i class="bi bi-shield-lock" aria-hidden="true"></i></span>
+        <span>
+            <strong>RemediTrack</strong>
+            <small>Security Operations Center</small>
+        </span>
+      </div>
+      
+      <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="mb-4">
+          <p class="eyebrow text-primary mb-1">Identity Management</p>
+          <h1 class="h3 mb-2 fw-bold">Sign In</h1>
+          <p class="text-muted small">Enter your credentials to access the security workspace.</p>
+        </div>
+
+        {% if form.errors or form.non_field_errors %}
+            <div class="alert alert-danger border-0 shadow-sm py-2 mb-4 small">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Login Failed:</strong> Invalid username or password.
+            </div>
+        {% endif %}
+
+        {% if request.GET.lockout %}
+            <div class="alert alert-warning border-0 shadow-sm py-2 mb-4 small">
+                <i class="bi bi-lock-fill me-2"></i> <strong>Account Locked:</strong> Too many failed attempts. Please try again in 1 hour.
+            </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="id_username">Username</label>
+            <div class="input-group">
+                <span class="input-group-text bg-primary bg-opacity-10 border-end-0 text-primary"><i class="bi bi-person"></i></span>
+                <input class="form-control border-start-0 ps-0" id="id_username" name="username" type="text" placeholder="Your username" required autofocus>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <div class="d-flex justify-content-between">
+                <label class="form-label fw-semibold" for="id_password">Password</label>
+            </div>
+            <div class="input-group">
+                <span class="input-group-text bg-primary bg-opacity-10 border-end-0 text-primary"><i class="bi bi-key"></i></span>
+                <input class="form-control border-start-0 ps-0" id="id_password" name="password" type="password" placeholder="Enter password" required>
+            </div>
+        </div>
+
+        <button class="btn btn-primary w-100 py-2 fw-bold shadow-sm" type="submit">
+            <i class="bi bi-box-arrow-in-right me-2"></i> Authenticate
+        </button>
+      </form>
+      
+      <div class="auth-footer mt-4 text-center">
+        <p class="text-muted small mb-0">Authorized Personnel Only</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

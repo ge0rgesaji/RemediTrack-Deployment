@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Remediation Checkpoint{% endblock %}
+
+{% block content %}
+<div class="page-heading mb-4">
+  <div class="page-heading-copy">
+    <span class="page-icon bg-white shadow-sm text-success"><i class="bi bi-patch-check" aria-hidden="true"></i></span>
+    <div>
+      <p class="eyebrow text-success mb-1">Checkpoint</p>
+      <h1 class="h3 mb-1 fw-bold">Finalize Action</h1>
+      <p class="text-muted mb-0">Record your results and move the vulnerability to the next lifecycle phase.</p>
+    </div>
+  </div>
+</div>
+
+<div class="row justify-content-center mt-4 pb-5">
+    <div class="col-xl-6 col-lg-8">
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="card-body p-4 p-md-5">
+                <div class="mb-5 pb-3 border-bottom d-flex align-items-center">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3">
+                        <i class="bi bi-journal-check fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">{{ vulnerability.title }}</h5>
+                        <span class="badge bg-light text-muted border small mt-1">{{ vulnerability.get_status_display }}</span>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="id_text" class="form-label fw-bold text-dark">Remediation Notes / Verification Details</label>
+                        <textarea name="text" id="id_text" class="form-control bg-light border-2" rows="6" placeholder="Describe what actions were taken, how it was verified, and any remaining concerns..." required></textarea>
+                        <div class="form-text mt-2 small text-muted">
+                            <i class="bi bi-info-circle me-1"></i> Your notes will be added to the historical timeline of this vulnerability.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                        <a href="{% url 'vulnerability_detail' vulnerability.pk %}" class="btn btn-light px-4 fw-semibold text-muted">
+                            <i class="bi bi-x-lg me-2"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success px-5 py-2 shadow-sm fw-bold">
+                            <i class="bi bi-check2-all me-2"></i> Complete Phase
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
