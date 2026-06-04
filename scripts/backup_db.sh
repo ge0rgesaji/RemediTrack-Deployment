@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 # RemediTrack Database Backup Script - Dynamic Version
 
 # Path to your environment file
