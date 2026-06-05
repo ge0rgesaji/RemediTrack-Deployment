@@ -34,6 +34,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check Secret Existence
+        run: |
+          if [ -z "$SSH_KEY" ]; then echo "❌ SSH_PRIVATE_KEY is MISSING"; else echo "✅ SSH_PRIVATE_KEY is present"; fi
+          if [ -z "$B_IP" ]; then echo "❌ BASTION_IP is MISSING"; else echo "✅ BASTION_IP is present"; fi
+          if [ -z "$S_IP" ]; then echo "❌ SERVER_IP is MISSING"; else echo "✅ SERVER_IP is present"; fi
+          if [ -z "$E_FILE" ]; then echo "❌ ENV_FILE is MISSING"; else echo "✅ ENV_FILE is present"; fi
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          B_IP: ${{ secrets.BASTION_IP }}
+          S_IP: ${{ secrets.SERVER_IP }}
+          E_FILE: ${{ secrets.ENV_FILE }}
       
       - name: Manual SSH Key Setup
         run: |
@@ -43,7 +55,6 @@ jobs:
           
       - name: Deploy to AWS via Bastion
         run: |
-          # Create config using direct echo to avoid EOF indentation issues
           echo "Host bastion" > ~/.ssh/config
           echo "  HostName ${{ secrets.BASTION_IP }}" >> ~/.ssh/config
           echo "  User ubuntu" >> ~/.ssh/config
@@ -56,13 +67,10 @@ jobs:
           echo "  ProxyJump bastion" >> ~/.ssh/config
           echo "  StrictHostKeyChecking no" >> ~/.ssh/config
 
-          # Transfer code
           rsync -avz --exclude '.git' ./ app-server:/home/ubuntu/Remeditrack-Devops/
 
-          # Create .env file from Secrets
           echo "${{ secrets.ENV_FILE }}" > .env.tmp
           scp .env.tmp app-server:/home/ubuntu/Remeditrack-Devops/src/.env
           rm .env.tmp
 
-          # Restart containers
           ssh app-server "cd ~/Remeditrack-Devops/src && docker compose up -d --build && docker compose exec -T web python manage.py migrate --noinput && docker compose exec -T web python manage.py collectstatic --noinput"
