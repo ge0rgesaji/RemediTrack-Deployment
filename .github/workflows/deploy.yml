@@ -35,16 +35,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install SSH Key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: 'just-a-placeholder'
+      - name: Manual SSH Key Setup
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
           
       - name: Deploy to AWS via Bastion
         run: |
-          # 1. Setup SSH Config to jump through Bastion
-          mkdir -p ~/.ssh
+          # 1. Setup SSH Config
           cat <<EOF > ~/.ssh/config
           Host bastion
             HostName ${{ secrets.BASTION_IP }}
@@ -60,10 +59,9 @@ jobs:
           EOF
 
           # 2. Transfer code
-          # We transfer everything in the current directory (.) to the server
           rsync -avz --exclude '.git' ./ app-server:/home/ubuntu/Remeditrack-Devops/
 
-          # 3. Create .env file from Secrets
+          # 3. Create .env file
           echo "${{ secrets.ENV_FILE }}" > .env.tmp
           scp .env.tmp app-server:/home/ubuntu/Remeditrack-Devops/src/.env
           rm .env.tmp
