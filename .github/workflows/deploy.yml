@@ -42,7 +42,8 @@ jobs:
         run: |
           # 1. Setup SSH Config to jump through Bastion
           mkdir -p ~/.ssh
-          echo "Host bastion
+          cat <<EOF > ~/.ssh/config
+          Host bastion
             HostName ${{ secrets.BASTION_IP }}
             User ubuntu
             IdentityFile ~/.ssh/id_rsa
@@ -52,15 +53,17 @@ jobs:
             HostName ${{ secrets.SERVER_IP }}
             User ubuntu
             ProxyJump bastion
-            StrictHostKeyChecking no" > ~/.ssh/config
+            StrictHostKeyChecking no
+          EOF
 
           # 2. Transfer code
           rsync -avz --exclude '.git' ./Remeditrack-Devops app-server:/home/ubuntu/
 
           # 3. Create .env file from Secrets
-          ssh app-server "cat <<EOF > ~/Remeditrack-Devops/src/.env
-${{ secrets.ENV_FILE }}
-EOF"
+          # We use a temp file to avoid YAML indentation issues with the secret
+          echo "${{ secrets.ENV_FILE }}" > .env.tmp
+          scp .env.tmp app-server:/home/ubuntu/Remeditrack-Devops/src/.env
+          rm .env.tmp
 
           # 4. Restart containers
           ssh app-server "cd ~/Remeditrack-Devops/src && docker compose up -d --build && docker compose exec -T web python manage.py migrate --noinput && docker compose exec -T web python manage.py collectstatic --noinput"
