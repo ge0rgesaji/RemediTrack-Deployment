@@ -1,0 +1,66 @@
+name: RemediTrack CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r Remeditrack-Devops/src/requirements.txt
+          
+      - name: Run Django Tests
+        run: |
+          cd Remeditrack-Devops/src
+          echo "SECRET_KEY=testing" > .env
+          python manage.py test vulnerabilities
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: 'just-a-placeholder'
+          
+      - name: Deploy to AWS via Bastion
+        run: |
+          # 1. Setup SSH Config to jump through Bastion
+          mkdir -p ~/.ssh
+          echo "Host bastion
+            HostName ${{ secrets.BASTION_IP }}
+            User ubuntu
+            IdentityFile ~/.ssh/id_rsa
+            StrictHostKeyChecking no
+
+          Host app-server
+            HostName ${{ secrets.SERVER_IP }}
+            User ubuntu
+            ProxyJump bastion
+            StrictHostKeyChecking no" > ~/.ssh/config
+
+          # 2. Transfer code
+          rsync -avz --exclude '.git' ./Remeditrack-Devops app-server:/home/ubuntu/
+
+          # 3. Create .env file from Secrets
+          ssh app-server "cat <<EOF > ~/Remeditrack-Devops/src/.env
+${{ secrets.ENV_FILE }}
+EOF"
+
+          # 4. Restart containers
+          ssh app-server "cd ~/Remeditrack-Devops/src && docker compose up -d --build && docker compose exec -T web python manage.py migrate --noinput && docker compose exec -T web python manage.py collectstatic --noinput"
