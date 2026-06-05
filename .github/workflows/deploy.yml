@@ -21,11 +21,11 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r Remeditrack-Devops/src/requirements.txt
+          pip install -r src/requirements.txt
           
       - name: Run Django Tests
         run: |
-          cd Remeditrack-Devops/src
+          cd src
           echo "SECRET_KEY=testing" > .env
           python manage.py test vulnerabilities
 
