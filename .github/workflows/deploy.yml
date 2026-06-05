@@ -60,10 +60,10 @@ jobs:
           EOF
 
           # 2. Transfer code
-          rsync -avz --exclude '.git' ./Remeditrack-Devops app-server:/home/ubuntu/
+          # We transfer everything in the current directory (.) to the server
+          rsync -avz --exclude '.git' ./ app-server:/home/ubuntu/Remeditrack-Devops/
 
           # 3. Create .env file from Secrets
-          # We use a temp file to avoid YAML indentation issues with the secret
           echo "${{ secrets.ENV_FILE }}" > .env.tmp
           scp .env.tmp app-server:/home/ubuntu/Remeditrack-Devops/src/.env
           rm .env.tmp
