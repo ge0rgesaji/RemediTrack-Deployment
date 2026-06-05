@@ -1,9 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "------------------------------------------------"
-echo "🔒 Starting AGGRESSIVE BASTION HARDENING..."
-echo "------------------------------------------------"
+echo "Starting AGGRESSIVE BASTION HARDENING..."
 
 # 1. Update and install security tools
 sudo apt update
@@ -44,7 +42,7 @@ sudo dpkg-reconfigure -plow unattended-upgrades
 # 5. Custom Security Banner
 sudo bash -c 'cat <<EOF > /etc/issue
 ***************************************************************************
-*                           ⚠️ AUTHORIZED ACCESS ONLY ⚠️                      *
+*                            AUTHORIZED ACCESS ONLY                       *
 *                                                                         *
 * This system is restricted to authorized users only. All activities are  *
 * logged and monitored. If you are not authorized, DISCONNECT NOW.        *
@@ -58,6 +56,6 @@ sudo ufw default allow outgoing
 sudo ufw allow 22/tcp
 sudo ufw --force enable
 
-echo "------------------------------------------------"
-echo "✅ Aggressive Bastion Hardening Complete!"
-echo "------------------------------------------------"
+
+echo "Aggressive Bastion Hardening Complete!"
+

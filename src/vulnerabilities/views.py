@@ -265,3 +265,14 @@ class TeamDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
     model = Team
     template_name = 'vulnerabilities/team_confirm_delete.html'
     success_url = reverse_lazy('team_list')
+
+from django.http import HttpResponse
+from django.db import connections
+from django.db.utils import OperationalError
+
+def health_check(request):
+    try:
+        connections['default'].cursor()
+    except OperationalError:
+        return HttpResponse("Database unreachable", status=503)
+    return HttpResponse("OK", status=200)

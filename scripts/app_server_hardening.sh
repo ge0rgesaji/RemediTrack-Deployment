@@ -1,9 +1,7 @@
 #!/bin/bash
 set -e
-
-echo "------------------------------------------------"
-echo "🚀 Starting APP SERVER HARDENING (Lean)..."
-echo "------------------------------------------------"
+ 
+echo  "Starting APP SERVER HARDENING"
 
 # 1. Update and install necessary tools
 sudo apt update
@@ -29,6 +27,4 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw --force enable
 
-echo "------------------------------------------------"
-echo "✅ App Server Hardening Complete!"
-echo "------------------------------------------------"
+echo  "Done APP SERVER HARDENING"
