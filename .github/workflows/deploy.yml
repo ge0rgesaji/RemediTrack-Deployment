@@ -43,28 +43,26 @@ jobs:
           
       - name: Deploy to AWS via Bastion
         run: |
-          # 1. Setup SSH Config
-          cat <<EOF > ~/.ssh/config
-          Host bastion
-            HostName ${{ secrets.BASTION_IP }}
-            User ubuntu
-            IdentityFile ~/.ssh/id_rsa
-            StrictHostKeyChecking no
+          # Create config using direct echo to avoid EOF indentation issues
+          echo "Host bastion" > ~/.ssh/config
+          echo "  HostName ${{ secrets.BASTION_IP }}" >> ~/.ssh/config
+          echo "  User ubuntu" >> ~/.ssh/config
+          echo "  IdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          echo "" >> ~/.ssh/config
+          echo "Host app-server" >> ~/.ssh/config
+          echo "  HostName ${{ secrets.SERVER_IP }}" >> ~/.ssh/config
+          echo "  User ubuntu" >> ~/.ssh/config
+          echo "  ProxyJump bastion" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
 
-          Host app-server
-            HostName ${{ secrets.SERVER_IP }}
-            User ubuntu
-            ProxyJump bastion
-            StrictHostKeyChecking no
-          EOF
-
-          # 2. Transfer code
+          # Transfer code
           rsync -avz --exclude '.git' ./ app-server:/home/ubuntu/Remeditrack-Devops/
 
-          # 3. Create .env file
+          # Create .env file from Secrets
           echo "${{ secrets.ENV_FILE }}" > .env.tmp
           scp .env.tmp app-server:/home/ubuntu/Remeditrack-Devops/src/.env
           rm .env.tmp
 
-          # 4. Restart containers
+          # Restart containers
           ssh app-server "cd ~/Remeditrack-Devops/src && docker compose up -d --build && docker compose exec -T web python manage.py migrate --noinput && docker compose exec -T web python manage.py collectstatic --noinput"
