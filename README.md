@@ -122,10 +122,13 @@ AWS_BACKUP_BUCKET_NAME=your_backup_bucket_name
 ---
 
 ## 📁 Directory Structure
+- `/docs`: Architecture diagram and docs
 - `infra/`: Terraform files for AWS resource management.
 - `scripts/`: Automation scripts for hardening, Nginx, backups, and monitoring.
 - `src/`: Django application source code, Dockerfile, and configurations.
 - `.github/`: CI/CD workflow definitions.
+
+
 
 ## 🔍 Verification
 - **Web App:** Visit the `alb_dns_name` in your browser.
